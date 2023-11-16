@@ -33,7 +33,7 @@ from fsdet.evaluation import (
     verify_results,
 )
 
-import logging
+from detectron2.utils.logger import setup_logger
 
 class Trainer(DefaultTrainer):
     """
@@ -52,7 +52,7 @@ class Trainer(DefaultTrainer):
         script and do not have to worry about the hacky if-else logic here.
         """
         # print(f"\nMY PRINT: dataset_name = {dataset_name}\n")
-        logger = logging.getLogger(__name__)
+        logger = setup_logger(output_dir, distributed_rank=rank)
         logger.info(f"\nMY PRINT: dataset_name = {dataset_name}\n")
         if output_folder is None:
             output_folder = os.path.join(cfg.OUTPUT_DIR, "inference")
