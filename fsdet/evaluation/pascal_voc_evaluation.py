@@ -31,6 +31,10 @@ class PascalVOCDetectionEvaluator(DatasetEvaluator):
         Args:
             dataset_name (str): name of the dataset, e.g., "voc_2007_test"
         """
+
+        # for torchvision download:
+        dataset_name = "datasets/VOCdevkit/VOC2007"  
+
         self._dataset_name = dataset_name
         meta = MetadataCatalog.get(dataset_name)
         self._anno_file_template = os.path.join(
