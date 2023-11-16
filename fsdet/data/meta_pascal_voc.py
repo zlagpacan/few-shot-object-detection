@@ -18,7 +18,10 @@ def load_filtered_voc_instances(
         dirname: Contain "Annotations", "ImageSets", "JPEGImages"
         split (str): one of "train", "test", "val", "trainval"
     """
-    assert False, f"name = {name}\ndirname = {dirname}\nsplit = {split}\nclassnames={classnames}"
+    # assert False, f"\nname = {name}\ndirname = {dirname}\nsplit = {split}\nclassnames={classnames}"
+        # name = voc_2007_test_all1
+        # dirname = datasets/VOC2007
+        # split = test
     is_shots = "shot" in name
     if is_shots:
         fileids = {}
