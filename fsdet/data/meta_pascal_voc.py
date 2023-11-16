@@ -22,7 +22,7 @@ def load_filtered_voc_instances(
         # name = voc_2007_test_all1
         # dirname = datasets/VOC2007
         # split = test
-    dirname = "fsdet://../" + dirname
+    # dirname = "fsdet://../" + dirname
     # dirname = "http://dl.yf.io/fs-det/" + dirname
     is_shots = "shot" in name
     if is_shots:
