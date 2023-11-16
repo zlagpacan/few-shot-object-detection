@@ -38,7 +38,10 @@ class PascalVOCDetectionEvaluator(DatasetEvaluator):
         self._dataset_name = dataset_name
         meta = MetadataCatalog.get(dataset_name)
         self._anno_file_template = os.path.join(
-            meta.dirname, "Annotations", "{}.xml"
+            # meta.dirname, "Annotations", "{}.xml"
+
+            # for torchvision download:
+            "datasets/VOCdevkit/VOC2007/", "Annotations", "{}.xml"
         )
         self._image_set_path = os.path.join(
             # meta.dirname, "ImageSets", "Main", meta.split + ".txt"
