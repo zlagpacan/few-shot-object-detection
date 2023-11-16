@@ -24,6 +24,7 @@ def load_filtered_voc_instances(
         # split = test
     # dirname = "fsdet://../" + dirname
     # dirname = "http://dl.yf.io/fs-det/" + dirname
+    dirname = "VOCdevkit/" + dirname
     is_shots = "shot" in name
     if is_shots:
         fileids = {}
