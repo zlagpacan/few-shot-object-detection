@@ -41,7 +41,10 @@ class PascalVOCDetectionEvaluator(DatasetEvaluator):
             meta.dirname, "Annotations", "{}.xml"
         )
         self._image_set_path = os.path.join(
-            meta.dirname, "ImageSets", "Main", meta.split + ".txt"
+            # meta.dirname, "ImageSets", "Main", meta.split + ".txt"
+
+            # for torchvision download:
+            "datasets/VOCdevkit/VOC2007/", "ImageSets", "Main", meta.split + ".txt"
         )
         self._class_names = meta.thing_classes
         # add this two terms for calculating the mAP of different subset
