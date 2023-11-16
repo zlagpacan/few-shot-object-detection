@@ -33,7 +33,7 @@ class PascalVOCDetectionEvaluator(DatasetEvaluator):
         """
 
         # for torchvision download:
-        dataset_name = "datasets/VOCdevkit/VOC2007"  
+        # dataset_name = "datasets/VOCdevkit/VOC2007"  
 
         self._dataset_name = dataset_name
         meta = MetadataCatalog.get(dataset_name)
