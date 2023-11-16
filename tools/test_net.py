@@ -33,6 +33,7 @@ from fsdet.evaluation import (
     verify_results,
 )
 
+import logging
 
 class Trainer(DefaultTrainer):
     """
@@ -50,7 +51,9 @@ class Trainer(DefaultTrainer):
         For your own dataset, you can simply create an evaluator manually in your
         script and do not have to worry about the hacky if-else logic here.
         """
-        print(f"\nMY PRINT: dataset_name = {dataset_name}\n")
+        # print(f"\nMY PRINT: dataset_name = {dataset_name}\n")
+        logger = logging.getLogger(__name__)
+        logger.info(f"\nMY PRINT: dataset_name = {dataset_name}\n")
         if output_folder is None:
             output_folder = os.path.join(cfg.OUTPUT_DIR, "inference")
         evaluator_list = []
