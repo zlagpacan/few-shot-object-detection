@@ -31,7 +31,11 @@ def load_filtered_voc_instances(
     is_shots = "shot" in name
     if is_shots:
         fileids = {}
-        split_dir = os.path.join("datasets", "vocsplit")
+
+        # for remote few-shot dataset
+        # split_dir = os.path.join("datasets", "vocsplit")
+        split_dir = os.path.join("fsdet://../", "datasets", "vocsplit")
+
         if "seed" in name:
             shot = name.split("_")[-2].split("shot")[0]
             seed = int(name.split("_seed")[-1])
