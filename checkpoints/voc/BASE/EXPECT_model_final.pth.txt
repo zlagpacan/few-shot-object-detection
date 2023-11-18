@@ -1,1 +1,0 @@
-expect model_final.pth pre-trained weights for model backbone PASCAL VOC 2007 in this directory

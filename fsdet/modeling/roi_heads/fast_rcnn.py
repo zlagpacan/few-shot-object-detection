@@ -462,3 +462,325 @@ class CosineSimOutputLayers(nn.Module):
         scores = self.scale * cos_dist
         proposal_deltas = self.bbox_pred(x)
         return scores, proposal_deltas
+
+# my additions:
+
+# 2-deep FC
+@ROI_HEADS_OUTPUT_REGISTRY.register()
+class FastRCNNOutputLayers_2(nn.Module):
+    """
+    Two linear layers for predicting Fast R-CNN outputs:
+      (1) proposal-to-detection box regression deltas
+      (2) classification scores
+    """
+
+    def __init__(
+        self, cfg, input_size, num_classes, cls_agnostic_bbox_reg, box_dim=4
+    ):
+        """
+        Args:
+            cfg: config
+            input_size (int): channels, or (channels, height, width)
+            num_classes (int): number of foreground classes
+            cls_agnostic_bbox_reg (bool): whether to use class agnostic for bbox regression
+            box_dim (int): the dimension of bounding boxes.
+                Example box dimensions: 4 for regular XYXY boxes and 5 for rotated XYWHA boxes
+        """
+        super(FastRCNNOutputLayers_2, self).__init__()
+
+        if not isinstance(input_size, int):
+            input_size = np.prod(input_size)
+
+        # The prediction layer for num_classes foreground classes and one
+        # background class
+        # (hence + 1)
+        # self.cls_score = nn.Linear(input_size, num_classes + 1)
+
+        # 2-layer fc
+        hidden_layer_dim = (input_size * 3) // 2 # arbitrary
+        self.cls_score_1 = nn.Linear(input_size, hidden_layer_dim, bias=True)
+        self.cls_score_2 = nn.Linear(hidden_layer_dim, num_classes + 1, bias=True)
+
+        num_bbox_reg_classes = 1 if cls_agnostic_bbox_reg else num_classes
+        self.bbox_pred = nn.Linear(input_size, num_bbox_reg_classes * box_dim)
+
+        # nn.init.normal_(self.cls_score.weight, std=0.01)
+
+        # follow their weight init for all layers
+            # maybe bad idea for hidden layers
+        nn.init.normal_(self.cls_score_1.weight, std=0.01)
+        nn.init.normal_(self.cls_score_2.weight, std=0.01)
+
+        nn.init.normal_(self.bbox_pred.weight, std=0.001)
+        # for l in [self.cls_score, self.bbox_pred]:
+        for l in [self.cls_score_1, self.cls_score_2, self.bbox_pred]:
+            nn.init.constant_(l.bias, 0)
+
+    def forward(self, x):
+        if x.dim() > 2:
+            x = torch.flatten(x, start_dim=1)
+
+        # scores = self.cls_score(x)
+
+        # use hidden layer
+        scores = self.cls_score_2(self.cls_score_1(x))
+
+        proposal_deltas = self.bbox_pred(x)
+        return scores, proposal_deltas
+
+# 3-deep FC
+@ROI_HEADS_OUTPUT_REGISTRY.register()
+class FastRCNNOutputLayers_3(nn.Module):
+    """
+    Two linear layers for predicting Fast R-CNN outputs:
+      (1) proposal-to-detection box regression deltas
+      (2) classification scores
+    """
+
+    def __init__(
+        self, cfg, input_size, num_classes, cls_agnostic_bbox_reg, box_dim=4
+    ):
+        """
+        Args:
+            cfg: config
+            input_size (int): channels, or (channels, height, width)
+            num_classes (int): number of foreground classes
+            cls_agnostic_bbox_reg (bool): whether to use class agnostic for bbox regression
+            box_dim (int): the dimension of bounding boxes.
+                Example box dimensions: 4 for regular XYXY boxes and 5 for rotated XYWHA boxes
+        """
+        super(FastRCNNOutputLayers_3, self).__init__()
+
+        if not isinstance(input_size, int):
+            input_size = np.prod(input_size)
+
+        # The prediction layer for num_classes foreground classes and one
+        # background class
+        # (hence + 1)
+        # self.cls_score = nn.Linear(input_size, num_classes + 1)
+
+        # 3-layer fc
+        hidden_layer_1_dim = input_size * 2 # arbitrary
+        hidden_layer_2_dim = ((num_classes + 1) * 3) // 2 # arbitrary
+        self.cls_score_1 = nn.Linear(input_size, hidden_layer_1_dim, bias=True)
+        self.cls_score_2 = nn.Linear(hidden_layer_1_dim, hidden_layer_2_dim, bias=True)
+        self.cls_score_3 = nn.Linear(hidden_layer_2_dim, num_classes + 1, bias=True)
+
+        num_bbox_reg_classes = 1 if cls_agnostic_bbox_reg else num_classes
+        self.bbox_pred = nn.Linear(input_size, num_bbox_reg_classes * box_dim)
+
+        # nn.init.normal_(self.cls_score.weight, std=0.01)
+
+        # follow their weight init for all layers
+            # maybe bad idea for hidden layers
+        nn.init.normal_(self.cls_score_1.weight, std=0.01)
+        nn.init.normal_(self.cls_score_2.weight, std=0.01)
+        nn.init.normal_(self.cls_score_3.weight, std=0.01)
+
+        nn.init.normal_(self.bbox_pred.weight, std=0.001)
+        # for l in [self.cls_score, self.bbox_pred]:
+        for l in [self.cls_score_1, self.cls_score_2, self.cls_score_3, self.bbox_pred]:
+            nn.init.constant_(l.bias, 0)
+
+    def forward(self, x):
+        if x.dim() > 2:
+            x = torch.flatten(x, start_dim=1)
+
+        # scores = self.cls_score(x)
+
+        # use hidden layers
+        scores = self.cls_score_3(self.cls_score_2(self.cls_score_1(x)))
+
+        proposal_deltas = self.bbox_pred(x)
+        return scores, proposal_deltas
+
+# 2-deep Cos
+@ROI_HEADS_OUTPUT_REGISTRY.register()
+class CosineSimOutputLayers_2(nn.Module):
+    """
+    Two outputs
+    (1) proposal-to-detection box regression deltas (the same as
+        the FastRCNNOutputLayers)
+    (2) classification score is based on cosine_similarity
+    """
+
+    def __init__(
+        self, cfg, input_size, num_classes, cls_agnostic_bbox_reg, box_dim=4
+    ):
+        """
+        Args:
+            cfg: config
+            input_size (int): channels, or (channels, height, width)
+            num_classes (int): number of foreground classes
+            cls_agnostic_bbox_reg (bool): whether to use class agnostic for bbox regression
+            box_dim (int): the dimension of bounding boxes.
+                Example box dimensions: 4 for regular XYXY boxes and 5 for rotated XYWHA boxes
+        """
+        super(CosineSimOutputLayers_2, self).__init__()
+
+        if not isinstance(input_size, int):
+            input_size = np.prod(input_size)
+
+        # The prediction layer for num_classes foreground classes and one
+        # background class
+        # (hence + 1)
+
+        # self.cls_score = nn.Linear(input_size, num_classes + 1, bias=False)
+
+        # 2 layer cos sim
+        hidden_layer_dim = (input_size * 3) // 2 # arbitrary
+        self.cls_score_1 = nn.Linear(input_size, hidden_layer_dim, bias=True)
+        self.cls_score_2 = nn.Linear(hidden_layer_dim, num_classes + 1, bias=False) # last cos layer unbiased
+
+        self.scale = cfg.MODEL.ROI_HEADS.COSINE_SCALE
+        if self.scale == -1:
+            # learnable global scaling factor
+            self.scale = nn.Parameter(torch.ones(1) * 20.0)
+        num_bbox_reg_classes = 1 if cls_agnostic_bbox_reg else num_classes
+        self.bbox_pred = nn.Linear(input_size, num_bbox_reg_classes * box_dim)
+
+        # nn.init.normal_(self.cls_score.weight, std=0.01)
+
+        # follow their weight init for all layers
+            # maybe bad idea for hidden layers
+        nn.init.normal_(self.cls_score_1.weight, std=0.01)
+        nn.init.normal_(self.cls_score_2.weight, std=0.01)
+
+        nn.init.normal_(self.bbox_pred.weight, std=0.001)
+        # for l in [self.bbox_pred]:
+        for l in [self.cls_score_1, self.bbox_pred]
+            nn.init.constant_(l.bias, 0)
+
+    def forward(self, x):
+        if x.dim() > 2:
+            x = torch.flatten(x, start_dim=1)
+
+        # normalize the input x along the `input_size` dimension
+        x_norm = torch.norm(x, p=2, dim=1).unsqueeze(1).expand_as(x)
+        x_normalized = x.div(x_norm + 1e-5)
+
+        # # normalize weight
+        # temp_norm = (
+        #     torch.norm(self.cls_score.weight.data, p=2, dim=1)
+        #     .unsqueeze(1)
+        #     .expand_as(self.cls_score.weight.data)
+        # )
+        # self.cls_score.weight.data = self.cls_score.weight.data.div(
+        #     temp_norm + 1e-5
+        # )
+
+        # normalize weight for final output layer
+        temp_norm = (
+            torch.norm(self.cls_score_2.weight.data, p=2, dim=1)
+            .unsqueeze(1)
+            .expand_as(self.cls_score_2.weight.data)
+        )
+        self.cls_score_2.weight.data = self.cls_score_2.weight.data.div(
+            temp_norm + 1e-5
+        )
+
+        # cos_dist = self.cls_score(x_normalized)
+
+        # use hidden layer
+        cos_dist = self.cls_score_2(self.cls_score_1(x_normalized))
+
+        scores = self.scale * cos_dist
+        proposal_deltas = self.bbox_pred(x)
+        return scores, proposal_deltas
+
+# 3-deep Cos
+@ROI_HEADS_OUTPUT_REGISTRY.register()
+class CosineSimOutputLayers_3(nn.Module):
+    """
+    Two outputs
+    (1) proposal-to-detection box regression deltas (the same as
+        the FastRCNNOutputLayers)
+    (2) classification score is based on cosine_similarity
+    """
+
+    def __init__(
+        self, cfg, input_size, num_classes, cls_agnostic_bbox_reg, box_dim=4
+    ):
+        """
+        Args:
+            cfg: config
+            input_size (int): channels, or (channels, height, width)
+            num_classes (int): number of foreground classes
+            cls_agnostic_bbox_reg (bool): whether to use class agnostic for bbox regression
+            box_dim (int): the dimension of bounding boxes.
+                Example box dimensions: 4 for regular XYXY boxes and 5 for rotated XYWHA boxes
+        """
+        super(CosineSimOutputLayers_3, self).__init__()
+
+        if not isinstance(input_size, int):
+            input_size = np.prod(input_size)
+
+        # The prediction layer for num_classes foreground classes and one
+        # background class
+        # (hence + 1)
+
+        # self.cls_score = nn.Linear(input_size, num_classes + 1, bias=False)
+
+        # 3 layer cos sim
+        hidden_layer_1_dim = input_size * 2 # arbitrary
+        hidden_layer_2_dim = ((num_classes + 1) * 3) // 2 # arbitrary
+        self.cls_score_1 = nn.Linear(input_size, hidden_layer_1_dim, bias=True)
+        self.cls_score_2 = nn.Linear(hidden_layer_1_dim, hidden_layer_2_dim, bias=True)
+        self.cls_score_3 = nn.Linear(hidden_layer_2_dim, num_classes + 1, bias=False) # last cos layer unbiased
+
+        self.scale = cfg.MODEL.ROI_HEADS.COSINE_SCALE
+        if self.scale == -1:
+            # learnable global scaling factor
+            self.scale = nn.Parameter(torch.ones(1) * 20.0)
+        num_bbox_reg_classes = 1 if cls_agnostic_bbox_reg else num_classes
+        self.bbox_pred = nn.Linear(input_size, num_bbox_reg_classes * box_dim)
+
+        # nn.init.normal_(self.cls_score.weight, std=0.01)
+
+        # follow their weight init for all layers
+            # maybe bad idea for hidden layers
+        nn.init.normal_(self.cls_score_1.weight, std=0.01)
+        nn.init.normal_(self.cls_score_2.weight, std=0.01)
+        nn.init.normal_(self.cls_score_3.weight, std=0.01)
+
+        nn.init.normal_(self.bbox_pred.weight, std=0.001)
+        # for l in [self.bbox_pred]:
+        for l in [self.cls_score_1, self.cls_score_2, self.bbox_pred]:
+            nn.init.constant_(l.bias, 0)
+
+    def forward(self, x):
+        if x.dim() > 2:
+            x = torch.flatten(x, start_dim=1)
+
+        # normalize the input x along the `input_size` dimension
+        x_norm = torch.norm(x, p=2, dim=1).unsqueeze(1).expand_as(x)
+        x_normalized = x.div(x_norm + 1e-5)
+
+        # # normalize weight
+        # temp_norm = (
+        #     torch.norm(self.cls_score.weight.data, p=2, dim=1)
+        #     .unsqueeze(1)
+        #     .expand_as(self.cls_score.weight.data)
+        # )
+        # self.cls_score.weight.data = self.cls_score.weight.data.div(
+        #     temp_norm + 1e-5
+        # )
+
+        # normalize weight for final output layer
+        temp_norm = (
+            torch.norm(self.cls_score_3.weight.data, p=2, dim=1)
+            .unsqueeze(1)
+            .expand_as(self.cls_score_3.weight.data)
+        )
+        self.cls_score_3.weight.data = self.cls_score_3.weight.data.div(
+            temp_norm + 1e-5
+        )
+
+        # cos_dist = self.cls_score(x_normalized)
+
+        # use hidden layers
+        cos_dist = self.cls_score_3(self.cls_score_2(self.cls_score_1(x_normalized)))
+
+        scores = self.scale * cos_dist
+        proposal_deltas = self.bbox_pred(x)
+        return scores, proposal_deltas
