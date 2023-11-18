@@ -648,7 +648,7 @@ class CosineSimOutputLayers_2(nn.Module):
 
         nn.init.normal_(self.bbox_pred.weight, std=0.001)
         # for l in [self.bbox_pred]:
-        for l in [self.cls_score_1, self.bbox_pred]
+        for l in [self.cls_score_1, self.bbox_pred]:
             nn.init.constant_(l.bias, 0)
 
     def forward(self, x):
