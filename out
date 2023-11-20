@@ -1,2 +1,0 @@
-tools/ckpt_surgery.py:        save_name = args.tar_name + "_combine.pth"
-tools/ckpt_surgery.py:            args.tar_name
